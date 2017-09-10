@@ -15,18 +15,18 @@ UDP_ADDRESS_BC = ('<broadcast>', 50002)
 class ClipSync:
 
     def __init__(self):
-
         #setup clipboard
         clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-        self._response = False
+        self.stop_broadcast = threading.Event()
 
     def _broadcast_thread(self):
+        #create broadcasting socket
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1) #enable broadcast
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         s.connect(UDP_ADDRESS_BC)
 
         #loops until there is a response from listening thread
-        while not self._response:
+        while not self.stop_broadcast.is_set():
             s.send('clipsync:broadcast')
             time.sleep(0.25)
 
@@ -37,10 +37,10 @@ class ClipSync:
         while True:
             data = s.recv(50)
             if data == 'clipsync:response':
-                self._response = True
+                self.stop_broadcast.set()
                 break
 
-    def find_a_device(self):
+    def find_device(self):
         """
         Finds first device that responds
         """
@@ -50,8 +50,10 @@ class ClipSync:
         #Create and start threads
         bc_thread = threading.Thread(target=self._broadcast_thread)
         list_thread = threading.Thread(target=self._listener_thread)
+        #Start threads
         bc_thread.start()
         list_thread.start()
+        #Wait for threads to finish
         bc_thread.join()
         list_thread.join()
 
