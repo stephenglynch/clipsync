@@ -9,6 +9,11 @@
 # Contribitors:
 #   Stephen G. Lynch <stepheng.lynch@gmail.com>
 
+"""
+ClipSync module used by the interface to find and select a device to synchronise
+clipboard with.
+"""
+
 import socket
 import threading
 import time
@@ -22,6 +27,10 @@ UDP_ADDRESS_BC = ('<broadcast>', 50002)
 
 
 class ClipSync:
+    """
+    A class that represents a connection to an external mobile whose clipboard
+    we are syncing with.
+    """
 
     def __init__(self):
         #setup clipboard
@@ -49,12 +58,16 @@ class ClipSync:
                 self.stop_broadcast.set()
                 break
 
-    def find_device(self):
+    def find_devices(self):
         """
-        Finds first device that responds
+        Broadcasts and lists devices that respond
+
+          :returns: list of ClipSync devices
+          :rtype: list
         """
 
         self._response = False
+        self._devices = []
 
         #Create and start threads
         bc_thread = threading.Thread(target=self._broadcast_thread)
@@ -68,6 +81,14 @@ class ClipSync:
 
         return ['TODO:return list of devices']
 
+    def select_device(self, address):
+        """
+        Selects the device whose clipboard will be synced
+
+          :param address: address of the device to connect 
+          :type address: (host, port)
+        """
+
 
 def update_phone_clipboard(board, event):
     #TODO: This needs to properly fleshed
@@ -78,9 +99,6 @@ def update_phone_clipboard(board, event):
     
 if __name__ == '__main__':
 
-    print 'started'
-
     cs = ClipSync()
     cs.find_a_device()
 
-    print 'finished'

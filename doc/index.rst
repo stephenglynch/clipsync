@@ -10,6 +10,12 @@ Welcome to ClipSync's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+.. automodule:: clipsync
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+
 
 
 Indices and tables
