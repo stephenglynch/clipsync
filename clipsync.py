@@ -36,6 +36,7 @@ class ClipSync:
         #setup clipboard
         clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         self.stop_broadcast = threading.Event()
+        self._external_device = None
 
     def _broadcast_thread(self):
         #create broadcasting socket
@@ -88,6 +89,19 @@ class ClipSync:
           :param address: address of the device to connect 
           :type address: (host, port)
         """
+
+        self._external_device = address
+
+    def synchronise(self):
+        """
+        Maintains synchronicity between paired devices clipboards. An external
+        device must have been selected first.
+        """
+
+        if self._external_device is None:
+            raise Exception
+
+
 
 
 def update_phone_clipboard(board, event):
