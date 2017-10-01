@@ -18,8 +18,16 @@ import socket
 import threading
 import time
 
+import clipboard
+
 UDP_ADDRESS_BC = ('<broadcast>', 50002)
 
+#TODO: write tests for these:
+
+SEND_STRING = 'CLIPSYNC:CLIPBOARD:{:4.4}'
+SEND_STRING_LEN = len(SEND_STRING.format(''))
+
+#TODO: write regular expression to extract length of clipboard from send string
 
 class ClipSync:
     """
@@ -87,6 +95,40 @@ class ClipSync:
 
         self._external_device = address
 
+    def _clipboard_listener_thread(self):
+        """
+        Thread that updates other device's clipboard when host machine's
+        clipboard changes
+        """
+
+        while True:
+            new_clipboard = clipboard.clipboard_change()
+            self._update_device_cb(new_clipboard)
+
+    def _device_listener(self, new_clipboard):
+        """
+        Listens to updates from the device
+        """
+
+        while True:
+            clipboard = self._get_device_cp()
+
+    def _get_device_cp(self):
+        """
+        Gets and parses data sent from device
+        """
+
+        self.device_sock.recv(SEND_STRING_LEN)
+
+
+    def _update_device_cb(self, new_clipboard):
+        """
+        Updates other device clipboard using a socket connection
+        """
+
+        self.device_sock.send(SEND_STRING.format(str(len(new_clipboard))))
+        self.device_sock.send(new_clipboard)
+
     def synchronise(self):
         """
         Maintains synchronicity between paired devices clipboards. An external
@@ -95,6 +137,12 @@ class ClipSync:
 
         if self._external_device is None:
             raise Exception
+
+        self.device_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.device_sock.bind(self._external_device)
+        self.device_sock.connect(self._external_device)
+
+
 
 
 
