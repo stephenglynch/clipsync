@@ -17,37 +17,33 @@ clipboard.
 import sys
 import threading
 
-try:
-	if sys.platform == 'linux':
-		import gi
-		gi.require_version('Gtk', '3.0')
-		from gi.repository import Gtk, Gdk
-	else:
-		raise ImportError
-
-except ImportError:
-	raise ImportError('Dependency not met')
+if sys.platform == 'linux':
+	import gi
+	gi.require_version('Gtk', '3.0')
+	from gi.repository import Gtk, Gdk
+else:
+	raise ImportError
 
 
 
-def clipboard_change():
+def get_next_copy():
 	"""
 	Blocking function that waits for a change in the clipboard. Once clipboard
 	has been updated function returns the new clipboard.
 	"""
-
 	clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+	copied_text = None
 
-	clipboard.connect('owner-change', _handler)
+	def handler(clipboard, owner):
 
+		nonlocal copied_text
+		copied_text = clipboard.wait_for_text()
+		Gtk.main_quit()
+
+	clipboard.connect('owner-change', handler)
 	Gtk.main()
 
-
-def _handler(clipboard, owner):
-
-	print(clipboard.wait_for_text())
-	Gtk.main_quit()
-
+	return copied_text
 
 
 
