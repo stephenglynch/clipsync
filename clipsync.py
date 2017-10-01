@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/bin/env python3
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,17 +17,17 @@ clipboard with.
 import socket
 import threading
 import time
+import re
 
 import clipboard
 
 UDP_ADDRESS_BC = ('<broadcast>', 50002)
 
-#TODO: write tests for these:
-
 SEND_STRING = 'CLIPSYNC:CLIPBOARD:{:4.4}'
 SEND_STRING_LEN = len(SEND_STRING.format(''))
 
 #TODO: write regular expression to extract length of clipboard from send string
+SEND_STRING_PATTERN = re.compile('CLIPSYNC:CLIPBOARD:(....)')
 
 class ClipSync:
     """
@@ -36,8 +36,6 @@ class ClipSync:
     """
 
     def __init__(self):
-        #setup clipboard
-        clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         self.stop_broadcast = threading.Event()
         self._external_device = None
 
@@ -49,7 +47,7 @@ class ClipSync:
 
         #loops until there is a response from listening thread
         while not self.stop_broadcast.is_set():
-            s.send('clipsync:broadcast')
+            s.send(b'clipsync:broadcast')
             time.sleep(0.25)
 
     def _listener_thread(self):
@@ -58,7 +56,7 @@ class ClipSync:
 
         while True:
             data = s.recv(50)
-            if data == 'clipsync:response':
+            if data == b'clipsync:response':
                 self.stop_broadcast.set()
                 break
 
@@ -126,8 +124,9 @@ class ClipSync:
         Updates other device clipboard using a socket connection
         """
 
-        self.device_sock.send(SEND_STRING.format(str(len(new_clipboard))))
-        self.device_sock.send(new_clipboard)
+        send_string = SEND_STRING.format(str(len(new_clipboard))).encode('utf8')
+        self.device_sock.send(send_string)
+        self.device_sock.send(new_clipboard.encode('uft8'))
 
     def synchronise(self):
         """
