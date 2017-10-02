@@ -15,7 +15,6 @@ clipboard.
 """
 
 import sys
-import threading
 
 if sys.platform == 'linux':
 	import gi

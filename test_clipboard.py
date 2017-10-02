@@ -10,10 +10,10 @@
 #   Stephen G. Lynch <stepheng.lynch@gmail.com>
 
 import socket
-import threading
 import time
 import importlib
 import sys
+import multiprocessing #GTK doesn't like multiple *threads* using its API
 
 import pytest
 
@@ -39,19 +39,22 @@ def test_platform_error():
                     reason="only runs on Linux")
 def test_get_clipboard():
 	clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-	
+
 	test_text = 'abcd'
 	copied_text = None
+
 	def helper():
 		nonlocal copied_text
 		copied_text = cb.get_next_copy()
 
-	copy_thread = threading.Thread(target=helper)
+	copy_thread = multiprocessing.Thread(target=helper)
 	copy_thread.start()
 	clipboard.set_text(test_text, -1)
 	copy_thread.join()
 
 	assert copied_text == test_text
+
+	Gtk.main_quit()
 
 
 
